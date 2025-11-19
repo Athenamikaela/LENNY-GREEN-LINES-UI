@@ -947,59 +947,52 @@ function Library.Add_Window(Title)
 				-- end primary dropdown creation
 				end
 
-	function Module.Create_Textbox(self, options)
+function Module.Create_Textbox(self, options)
     local Textbox = {
         Value = options.default or "",
         flag = options.flag
     }
 
-    -- Main container (will animate in/out with the module)
-    local TB_Container = Instance.new("Frame", Module["5c"])
-    TB_Container.Name = "TB_Container"
-    TB_Container.BackgroundTransparency = 1
-    TB_Container.Size = UDim2.new(0, 216, 0, 0)
-    TB_Container.LayoutOrder = (options.position == "top" and (Module._prependIndex - 1)) or (Module._layoutIndex + 1)
+    -- Container for smooth slide-in animation
+    local Container = Instance.new("Frame", Module["5c"])
+    Container.Name = "Textbox_Container"
+    Container.BackgroundTransparency = 1
+    Container.Size = UDim2.new(0, 216, 0, 0)
+    Container.ClipsDescendants = true
+
+    -- Layout order (top = insert above, default = below)
     if options.position == "top" then
         Module._prependIndex = Module._prependIndex - 1
+        Container.LayoutOrder = Module._prependIndex
     else
         Module._layoutIndex = Module._layoutIndex + 1
+        Container.LayoutOrder = Module._layoutIndex
     end
 
-    -- TextBox background + actual input
-    local Background = Instance.new("Frame", TB_Container)
-    Background.Size = UDim2.new(0, 216, 0, 28)
+    -- Main rounded background
+    local Background = Instance.new("Frame", Container)
+    Background.Size = UDim2.new(1, 0, 0, 30)
     Background.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     Background.BorderSizePixel = 0
-    local UICorner = Instance.new("UICorner", Background)
-    UICorner.CornerRadius = UDim.new(0, 6)
+    Background.Position = UDim2.new(0, 0, 0, 4) -- small top padding
 
-    local Title = Instance.new("TextLabel", Background)
-    Title.Size = UDim2.new(0, 100, 0, 12)
-    Title.Position = UDim2.new(0, 8, 0, 4)
-    Title.BackgroundTransparency = 1
-    Title.Text = options.name or "Text Input"
-    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.TextTransparency = 0.4
-    Title.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium)
-    Title.TextSize = 11
-    Title.TextXAlignment = Enum.TextXAlignment.Left
+    local Corner = Instance.new("UICorner", Background)
+    Corner.CornerRadius = UDim.new(0, 8)
 
+    -- Actual TextBox
     local Input = Instance.new("TextBox", Background)
-    Input.Size = UDim2.new(0, 200, 0, 18)
-    Input.Position = UDim2.new(0, 8, 0, 12)
+    Input.Size = UDim2.new(1, -16, 1, -12)
+    Input.Position = UDim2.new(0, 8, 0, 6)
     Input.BackgroundTransparency = 1
     Input.TextColor3 = Color3.fromRGB(255, 255, 255)
     Input.PlaceholderText = options.placeholder or "Enter text..."
-    Input.PlaceholderColor3 = Color3.fromRGB(178, 178, 178)
-    Input.Text = Textbox.Value
-    Input.TextScaled = true
+    Input.PlaceholderColor3 = Color3.fromRGB(170, 170, 170)
+    Input.Text = options.default or ""
     Input.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium)
+    Input.TextSize = 12
     Input.TextXAlignment = Enum.TextXAlignment.Left
     Input.ClearTextOnFocus = false
-
-    local TextConstraint = Instance.new("UITextSizeConstraint", Input)
-    TextConstraint.MaxTextSize = 12
-    TextConstraint.MinTextSize = 8
+    Input.TextTruncate = Enum.TextTruncate.AtEnd
 
     -- Load saved value
     if options.flag and Library.Flags[options.flag] then
@@ -1007,28 +1000,25 @@ function Library.Add_Window(Title)
         Textbox.Value = Library.Flags[options.flag]
     end
 
-    -- Callback + saving
-    Input.FocusLost:Connect(function(enterPressed)
-        if enterPressed or not enterPressed then -- fires on both Enter and clicking away
-            Textbox.Value = Input.Text
-            if options.flag then
-                Library.Flags[options.flag] = Input.Text
-                Library.save_flags()
-            end
-            if options.callback then
-                options.callback(Input.Text)
-            end
+    -- On change
+    Input.FocusLost:Connect(function()
+        Textbox.Value = Input.Text
+        if options.flag then
+            Library.Flags[options.flag] = Input.Text
+            Library.save_flags()
+        end
+        if options.callback then
+            options.callback(Input.Text)
         end
     end)
 
-    -- Animate in
-    Ts:Create(TB_Container, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 216, 0, 34)
+    -- Smooth appear animation
+    Ts:Create(Container, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 216, 0, 38)
     }):Play()
 
     return Textbox
 end
-
 				Module["78"] = Instance.new("ImageButton", Module["62"]);
 				Module["78"]["BorderSizePixel"] = 0;
 				Module["78"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
