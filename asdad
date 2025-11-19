@@ -1646,6 +1646,8 @@ function Library.Add_Window(Title)
 							local adjust = 0
 							if nextChild then
 								-- compute overlap in absolute coords
+								-- wait a frame so AbsolutePosition/layouts are up-to-date
+								RunService.Heartbeat:Wait()
 								local containerAbsY = DD_Container.AbsolutePosition.Y
 								local nextAbsY = nextChild.AbsolutePosition.Y
 								local openBottom = containerAbsY + desiredOpenHeight
@@ -1664,7 +1666,15 @@ function Library.Add_Window(Title)
 					end
 
 					DD.Frame.MouseButton1Click:Connect(function()
-						toggleDD()
+						-- run toggle safely and give tiny immediate feedback in case layout
+						-- computation blocks or errors. Use pcall to avoid runtime breaks.
+						pcall(function()
+							DD.Arrow.Rotation = DD.Arrow.Rotation -- noop to ensure property exists
+						end)
+						local ok, err = pcall(toggleDD)
+						if not ok then
+							warn('toggleDD error:', err)
+						end
 					end)
 
 					-- animate slide-down + fade-in for the dropdown container (header visible)
