@@ -20,23 +20,23 @@ local Library = {
     Flags = {}
 }
 
-if not isfolder('NebulaX') then
-	makefolder('NebulaX')
+if not isfolder('Byte') then
+    makefolder('Byte')
 end
 
 function Library:save_flags()
     local flags = HttpService:JSONEncode(Library.Flags)
 
-	writefile('NebulaX/' .. game.GameId .. '.lua', flags)
+    writefile('Byte/' .. game.GameId .. '.lua', flags)
 end
 
 function Library:load_flags()
-	if not isfile('NebulaX/' .. game.GameId .. '.lua') then 
+    if not isfile('Byte/' .. game.GameId .. '.lua') then 
         Library.save_flags()
         return
     end
 
-	local flags = readfile('NebulaX/' .. game.GameId .. '.lua')
+    local flags = readfile('Byte/' .. game.GameId .. '.lua')
 
     if not flags then 
         Library.save_flags()
@@ -1427,126 +1427,7 @@ function Library.Add_Window(Title)
 
 					return Slider
 				end
--- Inside your Module table
-function Module:Create_Textbox(options)
-	options = options or {}
 
-	local TB = {}
-	local Frame = Instance.new("TextButton")
-	Frame.Name = "Textbox"
-	Frame.Parent = Module["5c"]  -- Your container
-	Frame.BorderSizePixel = 0
-	Frame.AutoButtonColor = false
-	Frame.BackgroundTransparency = 1
-	Frame.Text = ""
-	Frame.Size = UDim2.new(0, 216, 0, 0)
-	Frame.LayoutOrder = (options.position == "top" and (Module._prependIndex := Module._prependIndex - 1) or (Module._layoutIndex := Module._layoutIndex + 1))
-
-	TB.Frame = Frame
-
-	-- Title Label (Left)
-	local Title = Instance.new("TextLabel", Frame)
-	Title.Name = "Title"
-	Title.Text = options.name or "Textbox"
-	Title.Size = UDim2.new(0, 172, 0, 12)
-	Title.Position = UDim2.new(0, 0, 0.1, 0)
-	Title.AnchorPoint = Vector2.new(0, 0.5)
-	Title.BackgroundTransparency = 1
-	Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-	Title.TextTransparency = 0.5
-	Title.TextXAlignment = Enum.TextXAlignment.Left
-	Title.TextScaled = true
-	Title.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium)
-	
-	local TitleConstraint = Instance.new("UITextSizeConstraint", Title)
-	TitleConstraint.MaxTextSize = 12
-	TitleConstraint.MinTextSize = 12
-
-	-- Input TextBox (Right)
-	local Input = Instance.new("TextBox", Frame)
-	Input.Name = "Input"
-	Input.Text = ""
-	Input.PlaceholderText = options.placeholder or "Enter text..."
-	Input.TextColor3 = Color3.fromRGB(255, 255, 255)
-	Input.PlaceholderColor3 = Color3.fromRGB(180, 180, 180)
-	Input.BackgroundTransparency = 1
-	Input.TextXAlignment = Enum.TextXAlignment.Right
-	Input.Size = UDim2.new(0, 80, 0, 14)
-	Input.Position = UDim2.new(1, -4, 0.4, 0)
-	Input.AnchorPoint = Vector2.new(1, 0.5)
-	Input.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium)
-	Input.TextSize = 12
-	Input.ClearTextOnFocus = false
-
-	local InputConstraint = Instance.new("UITextSizeConstraint", Input)
-	InputConstraint.MaxTextSize = 12
-	InputConstraint.MinTextSize = 12
-
-	TB.Input = Input
-
-	-- Store current value internally
-	local CurrentValue = options.default or ""
-
-	-- Set initial value
-	local function UpdateDisplay()
-		Input.Text = tostring(CurrentValue)
-	end
-	UpdateDisplay()
-
-	-- Public Methods
-	function TB:SetValue(value)
-		CurrentValue = value
-		UpdateDisplay()
-
-		if options.flag then
-			Library.Flags[options.flag] = value
-			Library.save_flags()
-		end
-
-		if options.callback then
-			pcall(options.callback, value)
-		end
-	end
-
-	function TB:GetValue()
-		return CurrentValue
-	end
-
-	-- Load saved flag value
-	if options.flag and Library.Flags[options.flag] ~= nil then
-		TB:SetValue(Library.Flags[options.flag])
-	end
-
-	-- Real-time input handling (optional)
-	if options.liveupdate then
-		Input:GetPropertyChangedSignal("Text"):Connect(function()
-			if Input.Text ~= tostring(CurrentValue) then
-				TB:SetValue(Input.Text)
-			end
-		end)
-	end
-
-	-- On focus lost (Enter pressed)
-	Input.FocusLost:Connect(function(enterPressed)
-		if enterPressed then
-			TB:SetValue(Input.Text)
-		else
-			-- Revert if not confirmed
-			UpdateDisplay()
-		end
-	end)
-
-	-- Animate in
-	spawn(function()
-		local tween = TweenService:Create(Frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-			Size = UDim2.new(0, 216, 0, 27),
-			BackgroundTransparency = 1
-		})
-		tween:Play()
-	end)
-
-	return TB
-end
 				-- Allows creating additional dropdowns inside this Module's Settings
 				function Module.Create_Dropdown(self, options)
 					local DD = {}
@@ -1563,16 +1444,7 @@ end
 					DD.Frame.BackgroundTransparency = 1
 					DD.Frame.TextTransparency = 1
 					-- layout order based on options.position ('top' to prepend)
-					-- auto-calculate position if not provided: place at top when module is currently opened, otherwise append
-					local pos = options.position
-					if not pos then
-						if Library.Flags[Module.flag] then
-							pos = 'top'
-						else
-							pos = 'bottom'
-						end
-					end
-					if pos == 'top' then
+					if options.position == 'top' then
 						Module._prependIndex = Module._prependIndex - 1
 						DD.Frame.LayoutOrder = Module._prependIndex
 					else
@@ -1776,13 +1648,11 @@ end
 							local nextChild = nil
 							local nextOrder = math.huge
 							for _, child in pairs(parent:GetChildren()) do
-								if child ~= DD_Container and child:IsA('GuiObject') then
-									local ok, ord = pcall(function() return child.LayoutOrder end)
-									if ok and type(ord) == 'number' then
-										if ord > myOrder and ord < nextOrder then
-											nextOrder = ord
-											nextChild = child
-										end
+								if child ~= DD_Container and child:IsA('Instance') and child.LayoutOrder then
+									local ord = child.LayoutOrder
+									if ord > myOrder and ord < nextOrder then
+										nextOrder = ord
+										nextChild = child
 									end
 								end
 							end
@@ -1791,30 +1661,21 @@ end
 								-- compute overlap in absolute coords. wait two frames to ensure layouts are stable
 								RunService.Heartbeat:Wait()
 								RunService.Heartbeat:Wait()
-								local ok1, containerPos = pcall(function() return DD_Container.AbsolutePosition end)
-								local ok2, nextPos = pcall(function() return nextChild.AbsolutePosition end)
-								local containerAbsY = (ok1 and containerPos and containerPos.Y) and containerPos.Y or 0
-								local nextAbsY = (ok2 and nextPos and nextPos.Y) and nextPos.Y or 0
+								local containerAbsY = DD_Container.AbsolutePosition and DD_Container.AbsolutePosition.Y or 0
+								local nextAbsY = nextChild.AbsolutePosition and nextChild.AbsolutePosition.Y or 0
 								local openBottom = containerAbsY + desiredOpenHeight
 								local overlap = openBottom - nextAbsY
 								if overlap > 0 then
 									-- add slightly larger padding so sliders visibly move out of the dropdown area
 									adjust = math.max(overlap + 8, 8)
 								end
-								-- debug: print which sibling we adjusted for (helps debugging layout issues)
-								pcall(function()
-									warn('toggleDD: nextChild=', nextChild.ClassName, 'LayoutOrder=', nextChild.LayoutOrder, 'overlap=', math.floor(overlap))
-								end)
 							end
 							local finalHeight = desiredOpenHeight + adjust
 							Ts:Create(DD_Container, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(0, 216, 0, finalHeight) }):Play()
-							Ts:Create(DD.Options, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(0, 218, 0, optionsHeight) }):Play()
-							pcall(function() DD.List.CanvasPosition = Vector2.new(0,0) end)
 							Ts:Create(DD.Arrow, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Rotation = -90 }):Play()
 						else
-						Ts:Create(DD_Container, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(0, 216, 0, headerHeight) }):Play()
-						Ts:Create(DD.Options, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Size = UDim2.new(0, 218, 0, 0) }):Play()
-						Ts:Create(DD.Arrow, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Rotation = 0 }):Play()
+							Ts:Create(DD_Container, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(0, 216, 0, headerHeight) }):Play()
+							Ts:Create(DD.Arrow, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Rotation = 0 }):Play()
 						end
 					end
 
@@ -1892,7 +1753,6 @@ return Library
 --     end
 -- })
 
-
 -- -- Add multiple sliders to the same module (works because Create_Slider is a Module method)
 -- myModule:Create_Slider({
 --     name = 'Speed',
@@ -1925,6 +1785,7 @@ return Library
 --         print('Speed slider value:', value)
 --     end
 -- })
+
 -- -- Example: create a slider appended at the BOTTOM (default)
 -- myModule:Create_Slider({
 --     name = 'Range',
@@ -1958,3 +1819,4 @@ return Library
 -- -- You can read the current selected option via the dropdown object (if you need it):
 -- -- print('Current mode:', dd1.Selected_Option)
 -- -- print('Current weapon:', dd2.Selected_Option)
+-+
