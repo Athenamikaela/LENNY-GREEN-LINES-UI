@@ -1446,6 +1446,22 @@ function Library.Add_Window(Title)
 						Module._layoutIndex = Module._layoutIndex + 1
 						DD.Frame.LayoutOrder = Module._layoutIndex
 					end
+
+					-- wrap the dropdown header + options in a container so we can animate
+					-- the container's size. Animating a single child's Size causes UIListLayout
+					-- to reposition siblings smoothly, preventing clipping of sliders below.
+					local DD_Container = Instance.new('Frame', Module["5c"])
+					DD_Container.BorderSizePixel = 0
+					DD_Container.BackgroundTransparency = 1
+					DD_Container.Size = UDim2.new(0, 216, 0, 0)
+					DD_Container.Name = 'DD_Container'
+					-- move the layout order from the header to the container so it sorts correctly
+					DD_Container.LayoutOrder = DD.Frame.LayoutOrder
+					DD.Frame.LayoutOrder = 0
+
+					-- reparent the header into the container so options (which are children
+					-- of the header) move with it
+					DD.Frame.Parent = DD_Container
 					DD.Frame.Name = [[Dropdown]]
 					DD.Frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 					DD.Frame.Text = [[]]
@@ -1610,10 +1626,12 @@ function Library.Add_Window(Title)
 						if state == nil then state = not open end
 						open = state
 						if open then
-							Ts:Create(DD.Options, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(0, 218, 0, 85) }):Play()
+							-- expand the whole container (header + options) so siblings slide down
+							Ts:Create(DD_Container, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(0, 216, 0, 112) }):Play()
 							Ts:Create(DD.Arrow, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Rotation = -90 }):Play()
 						else
-							Ts:Create(DD.Options, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(0, 218, 0, 0) }):Play()
+							-- collapse container back to header-only height
+							Ts:Create(DD_Container, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(0, 216, 0, 27) }):Play()
 							Ts:Create(DD.Arrow, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Rotation = 0 }):Play()
 						end
 					end
@@ -1622,10 +1640,11 @@ function Library.Add_Window(Title)
 						toggleDD()
 					end)
 
-					-- animate slide-down + fade-in for the dropdown header
+					-- animate slide-down + fade-in for the dropdown container (header visible)
 					pcall(function()
-						local tween = Ts:Create(DD.Frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(0, 216, 0, 27), TextTransparency = 0 })
+						local tween = Ts:Create(DD_Container, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(0, 216, 0, 27) })
 						tween:Play()
+						DD.Frame.TextTransparency = 0
 					end)
 
 					return DD
