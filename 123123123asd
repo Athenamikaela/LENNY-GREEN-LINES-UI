@@ -947,7 +947,7 @@ function Library.Add_Window(Title)
 				-- end primary dropdown creation
 				end
 
-				function Module.Create_Textbox(self, options)
+	function Module.Create_Textbox(self, options)
     local Textbox = {
         Value = options.default or "",
         flag = options.flag
